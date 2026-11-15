@@ -15,6 +15,13 @@
       "when": 1794764745745,
       "tag": "0001_demonic_captain_universe",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794774236795,
+      "tag": "0002_exotic_doctor_spectrum",
+      "breakpoints": true
     }
   ]
 }

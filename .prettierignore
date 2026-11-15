@@ -1,0 +1,13 @@
+# Generated files and third-party sources have their own formatting.
+node_modules/
+dist/
+.next/
+.vinext/
+.wrangler/
+.sites-runtime/
+outputs/
+work/
+components/ui/
+components/platform/
+lib/platform/
+docs/images/
