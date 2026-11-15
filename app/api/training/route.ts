@@ -1,4 +1,4 @@
-import { getChatGPTUser } from "../../chatgpt-auth";
+import { getCurrentUser } from "../../auth";
 import { getDb } from "../../../db";
 import { solves, notes, weeks, checkpoints, quizResults } from "../../../db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -10,7 +10,7 @@ import { quizKeys } from "../../../lib/quiz-keys";
 export const dynamic = "force-dynamic";
 const response = (data: unknown, status=200) => Response.json(data,{status,headers:{"Cache-Control":"no-store"}});
 export async function GET() {
- const user = await getChatGPTUser(); if(!user) return response({error:"로그인이 필요합니다."},401);
+ const user = await getCurrentUser(); if(!user) return response({error:"로그인이 필요합니다."},401);
  const db=getDb();
  const [done, entries, completed, checked, results]=await Promise.all([
   db.select().from(solves).where(eq(solves.userId,user.userId)),
@@ -22,7 +22,7 @@ export async function GET() {
  return response({solved:done.map(x=>x.challengeId),notes:Object.fromEntries(entries.map(x=>[x.challengeId,x.body])),weeks:completed.map(x=>x.week),completed:checked.map(x=>x.itemId),quiz:Object.fromEntries(results.map(x=>[x.questionId,{choice:x.choice,correct:x.correct,attempts:x.attempts}]))});
 }
 export async function POST(request:Request) {
- const user=await getChatGPTUser(); if(!user) return response({error:"로그인이 필요합니다."},401);
+ const user=await getCurrentUser(); if(!user) return response({error:"로그인이 필요합니다."},401);
  if(request.headers.get("origin") !== new URL(request.url).origin) return response({error:"허용되지 않은 요청입니다."},403);
  if(Number(request.headers.get("content-length")||0)>40000) return response({error:"요청이 너무 큽니다."},413);
  let data; try {const raw=await request.text(); if(raw.length>20000)return response({error:"요청이 너무 큽니다."},413);data=JSON.parse(raw);}catch{return response({error:"잘못된 요청입니다."},400);}

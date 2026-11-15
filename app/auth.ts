@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export type ChatGPTUser = {
+export type CurrentUser = {
   userId: string;
   displayName: string;
   email: string;
@@ -18,7 +18,7 @@ const SIGN_IN_PATH = "/signin-with-chatgpt";
 const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
-export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+export async function getCurrentUser(): Promise<CurrentUser | null> {
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);
@@ -39,21 +39,21 @@ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
   };
 }
 
-export async function requireChatGPTUser(
+export async function requireCurrentUser(
   returnTo: string,
-): Promise<ChatGPTUser> {
-  const user = await getChatGPTUser();
+): Promise<CurrentUser> {
+  const user = await getCurrentUser();
   if (user) return user;
 
-  redirect(chatGPTSignInPath(returnTo));
+  redirect(signInPath(returnTo));
 }
 
-export function chatGPTSignInPath(returnTo: string): string {
+export function signInPath(returnTo: string): string {
   const safeReturnTo = safeRelativeReturnPath(returnTo);
   return `${SIGN_IN_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
 }
 
-export function chatGPTSignOutPath(returnTo = "/"): string {
+export function signOutPath(returnTo = "/"): string {
   const safeReturnTo = safeRelativeReturnPath(returnTo);
   return `${SIGN_OUT_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
 }
