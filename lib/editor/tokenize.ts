@@ -1,4 +1,4 @@
-export type CodeLanguage = "shell" | "sql" | "generic";
+export type CodeLanguage = "shell" | "sql" | "generic" | "html" | "css";
 type TokenKind =
   | "plain"
   | "keyword"
@@ -30,6 +30,7 @@ const genericKeywords = new Set(
 
 // Lexical coloring only: every character, including unfinished input, is preserved.
 export function tokenizeCode(source: string, language: CodeLanguage): CodeToken[] {
+  if (language === "html" || language === "css") return tokenizeWeb(source, language);
   const comments =
     language === "sql"
       ? "--[^\\n]*|/\\*[\\s\\S]*?(?:\\*/|$)"
@@ -71,6 +72,27 @@ export function tokenizeCode(source: string, language: CodeLanguage): CodeToken[
     } else if (/^[+*/%=!<>|&^~?:-]+$/.test(text)) kind = "operator";
     if (language === "shell" && ["|", "||", "&", "&&", ";", "("].includes(text))
       commandExpected = true;
+    return { text, kind };
+  });
+}
+
+function tokenizeWeb(source: string, language: "html" | "css"): CodeToken[] {
+  const pattern =
+    /<!--[\s\S]*?(?:-->|$)|\/\*[\s\S]*?(?:\*\/|$)|"(?:\\.|[^"\\])*"?|'(?:\\.|[^'\\])*'?|<\/?[\w-]+|#[\da-fA-F]{3,8}\b|@?[\w-]+|\d+(?:\.\d+)?(?:px|em|rem|%|vh|vw)?|\s+|[^]/g;
+  return Array.from(source.matchAll(pattern), (match) => {
+    const text = match[0];
+    const after = source.slice(match.index! + text.length);
+    let kind: TokenKind = "plain";
+    if (/^(<!--|\/\*)/.test(text)) kind = "comment";
+    else if (/^["']/.test(text)) kind = "string";
+    else if (/^<\/?\w/.test(text) || text.startsWith("@")) kind = "keyword";
+    else if (/^#|^\d/.test(text)) kind = "number";
+    else if (
+      /^[\w-]+$/.test(text) &&
+      (language === "html" ? /^\s*=/.test(after) : /^\s*:/.test(after))
+    )
+      kind = "command";
+    else if (/^[{}:;=<>/.,()%]$/.test(text)) kind = "operator";
     return { text, kind };
   });
 }

@@ -16,8 +16,8 @@
     "test:integration": "node tests/integration/training-api.mjs && node tests/integration/exams-api.mjs",
     "typecheck": "tsc --noEmit",
     "check": "npm run format:check && npm run typecheck && npm test && npm run build",
-    "format": "prettier --write app components lib/content lib/editor lib/exams lib/labs lib/runtime lib/server db tests docs README.md package.json",
-    "format:check": "prettier --check app components lib/content lib/editor lib/exams lib/labs lib/runtime lib/server db tests docs README.md package.json"
+    "format": "prettier --write app components lib/content lib/coding lib/editor lib/exams lib/labs lib/runtime lib/server db tests docs README.md package.json",
+    "format:check": "prettier --check app components lib/content lib/coding lib/editor lib/exams lib/labs lib/runtime lib/server db tests docs README.md package.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

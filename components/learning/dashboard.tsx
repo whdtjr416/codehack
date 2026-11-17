@@ -9,8 +9,11 @@ import {
   ShieldCheck,
   BarChart3,
   NotebookPen,
+  Code2,
 } from "lucide-react";
 import { MockExam } from "../exams/mock-exam";
+import { CodingCourse } from "../coding/coding-course";
+import { codingTasks } from "../../lib/content/coding/tasks";
 import { QuestionList } from "./question-list";
 import { CodeText } from "../editor/code-editor";
 import { challenges } from "../../lib/content/ctf/challenges";
@@ -49,13 +52,14 @@ type ActionResult = {
 };
 const empty: TrainingState = { solved: [], notes: {}, weeks: [], completed: [], quiz: {} };
 const navigation = [
-  { label: "학습", items: ["리눅스 명령어", "DB · SQL", "CTF", "모의해킹"] },
+  { label: "학습", items: ["리눅스 명령어", "DB · SQL", "코드 짜기", "CTF", "모의해킹"] },
   { label: "시험", items: ["정보보안기사"] },
   { label: "기록", items: ["학습 현황", "노트"] },
 ];
 const navigationIcons = {
   "리눅스 명령어": Terminal,
   "DB · SQL": Database,
+  "코드 짜기": Code2,
   CTF: Flag,
   모의해킹: Crosshair,
   정보보안기사: ShieldCheck,
@@ -338,6 +342,26 @@ export default function Dashboard({
       setProgressMessage("완료 기록 저장 실패. 다시 실행하면 재시도합니다.");
     }
   }
+  async function recordCoding(id: string, completed = true) {
+    if (!signedIn)
+      return completed
+        ? "완료 기록은 이 브라우저에 저장됩니다."
+        : "이 단계의 코드를 초기화했습니다.";
+    try {
+      await mutate({ action: "complete", id, completed });
+      setState((s) => ({
+        ...s,
+        completed: completed
+          ? Array.from(new Set([...s.completed, id]))
+          : s.completed.filter((item) => item !== id),
+      }));
+      return completed ? "완료 기록 저장됨" : "이 단계의 코드를 초기화했습니다.";
+    } catch {
+      return completed
+        ? "서버 기록 저장 실패. 코드는 보관되며 다시 실행하면 재시도합니다."
+        : "서버 완료 기록 초기화 실패. 다시 초기화하면 재시도합니다.";
+    }
+  }
   async function reviewAnswer() {
     if (await save()) setReviewed(true);
   }
@@ -528,31 +552,37 @@ export default function Dashboard({
           )}
         </div>
       </aside>
-      <main id="content" className={active ? "workspace-main" : undefined} tabIndex={-1}>
+      <main
+        id="content"
+        className={active ? "workspace-main" : tab === "코드 짜기" ? "coding-main" : undefined}
+        tabIndex={-1}
+      >
         {!active && (
           <>
-            <div className="page-heading">
-              <h1>{tab}</h1>
-              {tab === "CTF" ? (
-                <span>
-                  {state.solved.length} / {challenges.length} 해결
-                </span>
-              ) : tab === "모의해킹" ? (
-                <span>
-                  {labCompleted} / {pentests.length} 완료
-                </span>
-              ) : tab === "정보보안기사" ? (
-                <a href={examSource.url} target="_blank" rel="noreferrer">
-                  시험 안내 ↗
-                </a>
-              ) : topic ? (
-                <span>직접 실행 · 채점</span>
-              ) : tab === "노트" ? (
-                <button className="secondary" disabled={!noteItems.length} onClick={exportNotes}>
-                  내보내기
-                </button>
-              ) : null}
-            </div>
+            {tab !== "코드 짜기" && (
+              <div className="page-heading">
+                <h1>{tab}</h1>
+                {tab === "CTF" ? (
+                  <span>
+                    {state.solved.length} / {challenges.length} 해결
+                  </span>
+                ) : tab === "모의해킹" ? (
+                  <span>
+                    {labCompleted} / {pentests.length} 완료
+                  </span>
+                ) : tab === "정보보안기사" ? (
+                  <a href={examSource.url} target="_blank" rel="noreferrer">
+                    시험 안내 ↗
+                  </a>
+                ) : topic ? (
+                  <span>직접 실행 · 채점</span>
+                ) : tab === "노트" ? (
+                  <button className="secondary" disabled={!noteItems.length} onClick={exportNotes}>
+                    내보내기
+                  </button>
+                ) : null}
+              </div>
+            )}
             {!signedIn && (
               <div className="notice">
                 <a href="/signin-with-chatgpt?return_to=%2F" target="_top">
@@ -593,6 +623,16 @@ export default function Dashboard({
                       </small>
                     </button>
                   ))}
+                  <button onClick={() => setTab("코드 짜기")}>
+                    <span className="category-title">
+                      코드 짜기<span aria-hidden="true">↗</span>
+                    </span>
+                    <span className="category-meta">HTML · CSS · 포트폴리오 사이트 제작</span>
+                    <small>
+                      {codingTasks.filter((task) => state.completed.includes(task.id)).length} /{" "}
+                      {codingTasks.length} 완료
+                    </small>
+                  </button>
                   <button onClick={() => setTab("CTF")}>
                     <span className="category-title">
                       CTF<span aria-hidden="true">↗</span>
@@ -730,6 +770,15 @@ export default function Dashboard({
                   </div>
                 </details>
               </>
+            )}
+
+            {tab === "코드 짜기" && (
+              <CodingCourse
+                key={viewerKey}
+                viewerKey={viewerKey}
+                completed={state.completed}
+                onComplete={recordCoding}
+              />
             )}
 
             {topic && (

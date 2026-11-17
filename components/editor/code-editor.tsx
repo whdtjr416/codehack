@@ -28,12 +28,16 @@ export function CodeEditor({
   onExecute,
   disabled,
   language,
+  id = "execution-source",
+  label,
 }: {
   value: string;
   onChange: (value: string) => void;
   onExecute: () => void;
   disabled: boolean;
-  language: "shell" | "sql";
+  language: "shell" | "sql" | "html" | "css";
+  id?: string;
+  label?: string;
 }) {
   const highlight = useRef<HTMLPreElement>(null);
   const gutter = useRef<HTMLDivElement>(null);
@@ -41,8 +45,14 @@ export function CodeEditor({
   return (
     <div className={`code-editor${disabled ? " is-disabled" : ""}`}>
       <div className="code-editor-header">
-        <span>{language === "sql" ? "query.sql" : "terminal.sh"}</span>
-        <span>{language === "sql" ? "SQL" : "Bash"}</span>
+        <span>
+          {
+            { sql: "query.sql", shell: "terminal.sh", html: "index.html", css: "style.css" }[
+              language
+            ]
+          }
+        </span>
+        <span>{language === "shell" ? "Bash" : language.toUpperCase()}</span>
       </div>
       <div className="code-editor-body">
         <div className="code-gutter" aria-hidden="true">
@@ -58,7 +68,8 @@ export function CodeEditor({
           </code>
         </pre>
         <textarea
-          id="execution-source"
+          id={id}
+          aria-label={label}
           className="code-input"
           spellCheck={false}
           autoCapitalize="off"
@@ -82,7 +93,9 @@ export function CodeEditor({
               onExecute();
             }
           }}
-          placeholder={language === "shell" ? "명령어를 입력하세요" : "SQL을 입력하세요"}
+          placeholder={
+            language === "shell" ? "명령어를 입력하세요" : `${language.toUpperCase()}을 입력하세요`
+          }
           disabled={disabled}
         />
       </div>

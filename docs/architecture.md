@@ -64,3 +64,15 @@ CTF는 서버의 정답 키와 제출한 flag를 비교합니다. 해결 기록�
 - 난이도: CTF는 문제별 `level`, 실행·모의해킹은 `lib/content/difficulty.ts`의 분류 기준을 사용합니다.
 
 변경 후 `npm run check`와 필요한 로컬 API 검사를 실행합니다. 신규 회차나 문항은 기존 제출 결과가 달라지지 않도록 ID와 채점 기준 변경을 검토합니다.
+
+## HTML·CSS 코드 짜기
+
+`lib/content/coding/`은 30과제와 요구사항·예시 코드를, `components/coding/`은 단계 선택과 편집·미리보기 화면을 담당합니다. `lib/coding/`에 단축키, 코드 저장, 문서 생성, DOM·스타일 검사를 분리했습니다.
+
+작성 코드는 `codehack:coding:<viewer>:v1` 키에 즉시 저장합니다. 사이트 제작의 다음 단계는 기존 해당 단계 초안 → 직전 단계 초안 → 시작 코드 순으로 불러옵니다. 저장 실패는 화면에 표시하고 원본을 덮어쓰지 않습니다. 초기화는 해당 단계의 코드와 완료 기록만 지웁니다.
+
+미리보기는 `allow-scripts`만 허용한 별도 iframe으로 실행합니다. 작성한 HTML에서 스크립트·이벤트 속성·문서 제어 요소를 제거하고, CSP nonce로 채점 코드만 실행합니다. `allow-same-origin`은 부여하지 않으며 외부 연결과 폼 전송을 차단합니다. 참고: [MDN iframe 보안 모델](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe).
+
+검사는 960px와 390px 프레임에서 렌더링 후 수행합니다. 새 프레임의 레이아웃이 준비될 때까지 기다리고 5초 안에 응답이 없으면 재실행을 안내합니다. 결과 메시지는 프레임의 window·실행 토큰·요구사항을 검증하며, 코드가 변경된 이전 결과로 완료를 기록하지 않습니다. 완료는 기존 `/api/training`과 `checkpoints`를 사용하므로 새 DB 마이그레이션은 필요하지 않습니다.
+
+Control + R은 코딩 작업 화면과 미리보기 안에서 실행하며 Command + R은 브라우저에 맡깁니다. 다운로드 문서에는 사용자 HTML·CSS와 연습 이미지가 포함되고 채점 스크립트는 포함되지 않습니다.
